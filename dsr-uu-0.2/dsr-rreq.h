@@ -16,14 +16,19 @@
 
 #ifndef NO_GLOBALS
 
-struct dsr_rreq_opt {
-	u_int8_t type;
-	u_int8_t length;
-	u_int16_t id;
-	u_int32_t target;
-	u_int32_t addrs[0];
+struct dsr_rreq_opt {        //DSR路由请求选项定义
+	u_int8_t type;       //选项类型
+	u_int8_t length;     //选项长度
+	u_int16_t id;        //路由id号
+	u_int32_t target;    //目的地址
+	u_int32_t addrs[0];  //记录路由信息
 };
-
+/*下面对路由id号和记录路由信息的addrs[ ]数组进行详细说明：
+1.路由id号是发起路由请求时源节点产生的id号，且每发起一次新的路由请求就会产生一个新的id号，
+但需要特别说明的是，id号都是唯一的。如果节点在路由缓存中检测到相同的id号，那么它将直接丢弃这个数据包以防止多次转发。
+如果没有发现相同的id，则转发该数据包并把id记录到缓存中的路由请求表中。
+2.addrs[ ]数组用来存储路由记录，当数据报到达第i的节点时，会在数组的第i项addrs[i]中记录对应的路由信息。
+*/
 #define DSR_RREQ_HDR_LEN sizeof(struct dsr_rreq_opt)
 #define DSR_RREQ_OPT_LEN (DSR_RREQ_HDR_LEN - 2)
 #define DSR_RREQ_TOT_LEN IP_HDR_LEN + sizeof(struct dsr_opt_hdr) + sizeof(struct dsr_rreq_opt)
@@ -51,3 +56,4 @@ void rreq_tbl_cleanup(void);
 #endif				/* NO_DECLS */
 
 #endif				/* _DSR_RREQ */
+//剩下的是异常处理特殊情况的考虑啥的
