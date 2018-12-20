@@ -1,4 +1,4 @@
-
+#Makefile生成文件
 SRC=dsr-module.c dsr-pkt.c dsr-dev.c dsr-io.c dsr-opt.c dsr-rreq.c dsr-rrep.c dsr-rerr.c dsr-ack.c dsr-srt.c send-buf.c debug.c neigh.c maint-buf.c
 
 NS_SRC=dsr-pkt.c dsr-io.c dsr-opt.c dsr-rreq.c dsr-rrep.c dsr-rerr.c dsr-ack.c dsr-srt.c send-buf.c neigh.c maint-buf.c link-cache.c
@@ -41,6 +41,9 @@ MIPS_CC=mipsel-linux-gcc
 MIPS_LD=mipsel-linux-ld
 
 # NS2
+#NS2（ Network Simulator Version 2），是UC Berkeley开发的一个离散事件驱动的事件模拟器。
+#它能模拟Ad Hoc网络路由协议运行的全过程，并把仿真结果输出到一个trace文件中。
+#通过对trace文件的分析，可以了解到Ad Hoc网络路由协议运行的状况，从而分析评价路由协议的性能好坏
 OBJS_NS=$(NS_SRC:%.c=%-ns.o)
 OBJS_NS_CPP=$(NS_SRC_CPP:%.cc=%-ns.o)
 
