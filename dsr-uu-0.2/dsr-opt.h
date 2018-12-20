@@ -24,19 +24,20 @@ struct dsr_opt {
 };
 
 /* The DSR options header (always comes first) */
+//通过对 dsr_opt_hdr代码分析，我们可以得出DSR选项头的格式详见大作业文档
 struct dsr_opt_hdr {
-	u_int8_t nh;
-#if defined(__LITTLE_ENDIAN_BITFIELD)
+	u_int8_t nh;//Next Header：下一报头
+#if defined(__LITTLE_ENDIAN_BITFIELD)//对小端的定义
 
-	u_int8_t res:7;
-	u_int8_t f:1;
-#elif defined (__BIG_ENDIAN_BITFIELD)
-	u_int8_t f:1;
-	u_int8_t res:7;
+	u_int8_t res:7; //Reserved：保留位，小端模式占7位
+	u_int8_t f:1;   //Flag：标志位，小端模式占1位
+#elif defined (__BIG_ENDIAN_BITFIELD)//同理对大端的定义
+	u_int8_t f:1;    //Flag：标志位，大端模式占1位
+	u_int8_t res:7; //Reserved：保留位，大端模式占7位
 #else
 #error  "Please fix <asm/byteorder.h>"
 #endif
-	u_int16_t p_len;	/* payload length */
+	u_int16_t p_len;	/* payload length 负载长度*/
 #ifdef NS2
 	static int offset_;
 
@@ -51,7 +52,8 @@ struct dsr_opt_hdr {
 		return ntohs(p_len) + sizeof(struct dsr_opt_hdr);
 	}
 #endif				/* NS2 */
-	struct dsr_opt option[0];
+	struct dsr_opt option[0];  /*Option: DSR选项；这里需要特别对option[0]做一下说明，
+	                            option按照T-L-V可扩展格式进行编码，记录不同DSR选项的控制信息。*/
 };
 
 struct dsr_pad1_opt {
@@ -66,12 +68,12 @@ struct dsr_pad1_opt {
 
 /* Header lengths */
 #define DSR_FIXED_HDR_LEN 4	/* Should be the same as DSR_OPT_HDR_LEN, but that
-				 * is not the case in ns-2 */
+				 * is not the case in ns-2 注意在ns-2中的不同*/
 #define DSR_OPT_HDR_LEN sizeof(struct dsr_opt_hdr)
 #define DSR_OPT_PAD1_LEN 1
 #define DSR_PKT_MIN_LEN 24	/* IP header + DSR header =  20 + 4 */
 
-/* Header types */
+/* Header types 头类型*/
 #define DSR_OPT_PADN       0
 #define DSR_OPT_RREP       1
 #define DSR_OPT_RREQ       2
