@@ -1,6 +1,7 @@
 0.1:
-	* Initial release.
+	* Initial release.原始发行的版本
 0.2:	
+        增加了一些修复功能使得0.2版的动态路由协议更加有效
 	* Added spec file.
 	* Compilation fixes for kernel 2.6.12 on FC4 
 	* Fixed segmentation fault on module load on newer 2.4 kernels.
