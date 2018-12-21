@@ -25,23 +25,23 @@
 #include "link-cache.h"
 #include "debug.h"
 #include "send-buf.h"
-
+//在dsr_recv() 函数中，实现了节点处理接收到的数据包的功能。
 int NSCLASS dsr_recv(struct dsr_pkt *dp)
 {
 	int i = 0, action;
 	int mask = DSR_PKT_NONE;
 
-	/* Process DSR Options */
+/* Process DSR Options处理DSR选项 */
 	action = dsr_opt_recv(dp);
-
+//在35行，调用dsr_opt_recv() 函数，检查数据包的选项，并返回数据包的状态，将值赋给action，方便后续处理
 	/* Add mac address of previous hop to the neighbor table */
-
-	if (dp->flags & PKT_PROMISC_RECV) {
-		dsr_pkt_free(dp);
-		return 0;
-	}
+//然后在39-42行，对接收到的数据包的状态值和PKT_PROMISC_RECV进行与操作，
+	if (dp->flags & PKT_PROMISC_RECV) {//若不为0
+		dsr_pkt_free(dp);          //那么调用dsr_pkt_free() 函数，将数据包的空间释放掉，丢弃该数据包
+		return 0;                  //然后返回
+	}//若为0，那么在43-112行，进入for循环
 	for (i = 0; i < DSR_PKT_ACTION_LAST; i++) {
-	
+	//使用switch语句，根据数据包的不同状态，进行相应处理。
 		switch (action & mask) {
 		case DSR_PKT_NONE:
 			break;
@@ -59,23 +59,24 @@ int NSCLASS dsr_recv(struct dsr_pkt *dp)
 			//packet
 			//dsr_opt_remove(dp);
 			break;
-		case DSR_PKT_FORWARD:
+		case DSR_PKT_FORWARD://在62-80行，如果是需要转发的数据包，会检查其TTL
 
 #ifdef NS2
 			if (dp->nh.iph->ttl() < 1)
 #else
-			if (dp->nh.iph->ttl < 1)
+			if (dp->nh.iph->ttl < 1)  
 #endif
-			{
+			{//若ttl为0，则丢弃该数据包
 				DEBUG("ttl=0, dropping!\n");
 				dsr_pkt_free(dp);
 				return 0;
-			} else {
+			} else {//否则：
 				DEBUG("Forwarding %s %s nh %s\n",
-				      print_ip(dp->src),
-				      print_ip(dp->dst), print_ip(dp->nxt_hop));
-				XMIT(dp);
-				return 0;
+				      print_ip(dp->src),     //打印源端IP地址
+				      print_ip(dp->dst),     //打印目的端IP地址
+				      print_ip(dp->nxt_hop));//打印下一跳IP地址
+				XMIT(dp);                    //然后执行XMIT()传输数据包
+				return 0;                    
 			}
 			break;
 		case DSR_PKT_FORWARD_RREQ:
@@ -112,7 +113,7 @@ int NSCLASS dsr_recv(struct dsr_pkt *dp)
 	}
 
 	dsr_pkt_free(dp);
-
+//在最后，释放该数据包地址空间，丢弃该数据包，完成函数的执行。
 	return 0;
 }
 
