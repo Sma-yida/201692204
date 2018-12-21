@@ -202,7 +202,7 @@ int NSCLASS dsr_rerr_send(struct dsr_pkt *dp_trigg, struct in_addr unr_addr)
 	return -1;
 
 }
-
+//dsr_rerr_opt_recv()函数中，实现了对于接收到的路由错误选项进行处理的功能。
 int NSCLASS dsr_rerr_opt_recv(struct dsr_pkt *dp, struct dsr_rerr_opt *rerr_opt)
 {
 	struct in_addr err_src, err_dst, unr_addr;
@@ -211,28 +211,28 @@ int NSCLASS dsr_rerr_opt_recv(struct dsr_pkt *dp, struct dsr_rerr_opt *rerr_opt)
 		return -1;
 	
 	dp->rerr_opt[dp->num_rerr_opts++] = rerr_opt;
-
+//在215行，使用switch()对于不同的错误执行不同的命令
 	switch (rerr_opt->err_type) {
-	case NODE_UNREACHABLE:
+	case NODE_UNREACHABLE://在216-234行，如果是节点不可达
 		err_src.s_addr = rerr_opt->err_src;
 		err_dst.s_addr = rerr_opt->err_dst;
 
 		memcpy(&unr_addr, rerr_opt->info, sizeof(struct in_addr));
 
 		DEBUG("NODE_UNREACHABLE err_src=%s err_dst=%s unr=%s\n",
-		      print_ip(err_src), print_ip(err_dst), print_ip(unr_addr));
+		      print_ip(err_src), print_ip(err_dst), print_ip(unr_addr));//则打印错误信息
 
 		/* For now we drop all unacked packets... should probably
 		 * salvage */
-		maint_buf_del_all(err_dst);
+		maint_buf_del_all(err_dst);//然后调用maint_buf_del_all()函数，丢弃所有未返回ack的数据包
 
 		/* Remove broken link from cache */
-		lc_link_del(err_src, unr_addr);
+		lc_link_del(err_src, unr_addr);//以及调用lc_link_del()函数，将这条损坏的链路从缓存中删除
 
 		/* TODO: Check options following the RERR option */
 /* 		dsr_rtc_del(my_addr(), err_dst); */
 		break;
-	case FLOW_STATE_NOT_SUPPORTED:
+	case FLOW_STATE_NOT_SUPPORTED://在235-238行，如果是流状态不支持或者是选项不支持，则打印错误信息。
 		DEBUG("FLOW_STATE_NOT_SUPPORTED\n");
 		break;
 	case OPTION_NOT_SUPPORTED:
