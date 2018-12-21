@@ -435,43 +435,43 @@ static struct dsr_rreq_opt *dsr_rreq_opt_add(char *buf, unsigned int len,
 
 	return rreq_opt;
 }
-
+//dsr_rreq_send()实现了发送路由请求的功能
 int NSCLASS dsr_rreq_send(struct in_addr target, int ttl)
 {
 	struct dsr_pkt *dp;
 	char *buf;
 	int len = DSR_OPT_HDR_LEN + DSR_RREQ_HDR_LEN;
 
-	dp = dsr_pkt_alloc(NULL);
-
+	dp = dsr_pkt_alloc(NULL);//先申请一个数据包
+//然后对申请数据包的成功与否进行判断
 	if (!dp) {
 		DEBUG("Could not allocate DSR packet\n");
-		return -1;
-	}
-	dp->dst.s_addr = DSR_BROADCAST;
-	dp->nxt_hop.s_addr = DSR_BROADCAST;
-	dp->src = my_addr();
-
+		return -1;//若失败则打印信息并退出
+	}//若成功，则在451-453行，将数据包的目的地址和下一跳地址都定义成广播地址，将源地址调用my_addr()函数，设置为自身地址
+	dp->dst.s_addr = DSR_BROADCAST;    //将数据包的目的地址定义成广播地址
+	dp->nxt_hop.s_addr = DSR_BROADCAST;//将数据包的下一跳地址定义成广播地址
+	dp->src = my_addr();               //源地址调用my_addr()函数，设置为自身地址
+//然后在455-459行，为选项申请内存地址并检查是否申请成功
 	buf = dsr_pkt_alloc_opts(dp, len);
 
-
+//若失败，则调用dsr_pkt_free()函数，将该数据包的空间释放，丢弃该数据包，然后退出函数
 	if (!buf)
 		goto out_err;
-
+//若成功，则调用dsr_build_ip()函数
 	dp->nh.iph =
 	    dsr_build_ip(dp, dp->src, dp->dst, IP_HDR_LEN, IP_HDR_LEN + len,
 			 IPPROTO_DSR, ttl);
-
+//构造数据包的头部，包括源端IP地址，目的端IP地址，TTL等信息
 	if (!dp->nh.iph)
 		goto out_err;
-
+//此处若构造失败，则丢弃该数据包并退出函数
 	dp->dh.opth = dsr_opt_hdr_add(buf, len, DSR_NO_NEXT_HDR_TYPE);
-
+//dsr_opt_hdr_add()构造选项头，初始化信息，并检查是否构造成功
 	if (!dp->dh.opth) {
 		DEBUG("Could not create DSR opt header\n");
 		goto out_err;
-	}
-
+	}//若失败就打印信息并丢弃数据包
+         //若成功，则调用dsr_opt_hdr_add()对路由请求选项进行添加，同样需要检查是否添加成功
 	buf += DSR_OPT_HDR_LEN;
 	len -= DSR_OPT_HDR_LEN;
 
@@ -490,12 +490,12 @@ int NSCLASS dsr_rreq_send(struct in_addr target, int ttl)
 	dp->flags |= PKT_XMIT_JITTER;
 
 	XMIT(dp);
-
+//调用XMIT()函数（实际是调用dsr_dev_xmit()函数），进行数据包的发送
 	return 0;
 
       out_err:
 	dsr_pkt_free(dp);
-
+//调用dsr_pkt_free()函数，将该数据包的空间释放，丢弃该数据包，然后退出函数
 	return -1;
 }
 
