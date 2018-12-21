@@ -479,7 +479,7 @@ int dsr_dev_deliver(struct dsr_pkt *dp)
 
 	return 0;
 }
-
+//dsr_dev_xmit()函数，进行数据包的发送
 int dsr_dev_xmit(struct dsr_pkt *dp)
 {
 	struct sk_buff *skb;
@@ -487,10 +487,10 @@ int dsr_dev_xmit(struct dsr_pkt *dp)
 	struct in_addr dst;
 	int res = -1;
 	int len = 0;	
-
-	if (!dp)
+//在491-513行进行判断：
+	if (!dp)//若不符合条件，则丢弃该数据包并退出函数；
 		return -1;
-
+//若符合条件，则在514-522行，对MAC头进行封装并检查其合法性。
 	if (dp->flags & PKT_REQUEST_ACK)
 		maint_buf_add(dp);
 
@@ -511,7 +511,7 @@ int dsr_dev_xmit(struct dsr_pkt *dp)
 		goto out_err;
 	}
 
-	/* Create hardware header */
+	/* Create hardware header *///创建硬件标头，对MAC头进行封装并检查其合法性。
 	if (dsr_hw_header_create(dp, skb) < 0) {
 		DEBUG("Could not create hardware header\n");
 		dev_kfree_skb_any(skb);
@@ -520,14 +520,14 @@ int dsr_dev_xmit(struct dsr_pkt *dp)
 	
 	len = skb->len;
 	dst.s_addr = skb->nh.iph->daddr;
-	
+//对发送信息的细节进行打印输出
 	DEBUG("Sending %d bytes data_len=%d %s : %s\n",
 	      len, skb->data_len,
 	      print_eth(skb->mac.raw),
 	      print_ip(dst));
-		
+	//应该考虑使用ip_finish_output代替	
 	/* TODO: Should consider using ip_finish_output instead */
-	res = dev_queue_xmit(skb);
+	res = dev_queue_xmit(skb);//调用dev_queue_ximt()函数发送该数据包。
 
 	if (res < 0)
 		goto out_err;
