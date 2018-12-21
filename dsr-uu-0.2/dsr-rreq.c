@@ -42,15 +42,15 @@ static unsigned int rreq_seqno;
 
 #define STATE_IDLE          0
 #define STATE_IN_ROUTE_DISC 1
-
+//定义路由请求表
 struct rreq_tbl_entry {
 	list_t l;
-	int state;
-	struct in_addr node_addr;
+	int state;               //表示路由请求的状态
+	struct in_addr node_addr;//路由请求的目标地址
 	int ttl;
 	DSRUUTimer *timer;
 	struct timeval tx_time;
-	struct timeval last_used;
+	struct timeval last_used;//上一次被使用到现在的时间间隔
 	usecs_t timeout;
 	unsigned int num_rexmts;
 	struct tbl rreq_id_tbl;
