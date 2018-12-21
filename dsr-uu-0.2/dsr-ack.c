@@ -21,7 +21,7 @@
 #include "link-cache.h"
 #include "neigh.h"
 #include "maint-buf.h"
-
+//
 struct dsr_ack_opt *dsr_ack_opt_add(char *buf, int len, struct in_addr src,
 				    struct in_addr dst, unsigned short id)
 {
@@ -38,11 +38,11 @@ struct dsr_ack_opt *dsr_ack_opt_add(char *buf, int len, struct in_addr src,
 
 	return ack;
 }
-
+//dsr_ack_send()实现了发送ACK的功能
 int NSCLASS dsr_ack_send(struct in_addr dst, unsigned short id)
 {
-	struct dsr_pkt *dp;
-	struct dsr_ack_opt *ack_opt;
+	struct dsr_pkt *dp;            //申请一个数据包
+	struct dsr_ack_opt *ack_opt;   //申请ACK选项头
 	int len;
 	char *buf;
 
@@ -52,29 +52,29 @@ int NSCLASS dsr_ack_send(struct in_addr dst, unsigned short id)
 /* 		DEBUG("No source route to %s\n", print_ip(dst.s_addr)); */
 /* 		return -1; */
 /* 	} */
-
+//从56行开始对数据包进行初始化
 	len = DSR_OPT_HDR_LEN + /* DSR_SRT_OPT_LEN(srt) +  */ DSR_ACK_HDR_LEN;
 
 	dp = dsr_pkt_alloc(NULL);
 
-	dp->dst = dst;
+	dp->dst = dst;      //初始化其目的地址
 	/* dp->srt = srt; */
-	dp->nxt_hop = dst;	//dsr_srt_next_hop(dp->srt, 0);
-	dp->src = my_addr();
+	dp->nxt_hop = dst;  //dsr_srt_next_hop(dp->srt, 0);初始化下一条地址为设定的目的地址
+	dp->src = my_addr();//将源地址调用my_addr()函数设为其自身的地址
 
 	buf = dsr_pkt_alloc_opts(dp, len);
 
 	if (!buf)
 		goto out_err;
-
+//若构造成功，则调用dsr_build_ip()函数，构造数据包的头部，包括源端IP地址，目的端IP地址，TTL等信息。
 	dp->nh.iph = dsr_build_ip(dp, dp->src, dp->dst, IP_HDR_LEN,
 				  IP_HDR_LEN + len, IPPROTO_DSR, IPDEFTTL);
-
+//若失败则调用dsr_pkt_free()函数，将该数据包的空间释放，丢弃该数据包，然后退出函数
 	if (!dp->nh.iph) {
 		DEBUG("Could not create IP header\n");
 		goto out_err;
 	}
-
+//第78行构造选项头对路由选项进行添加，
 	dp->dh.opth = dsr_opt_hdr_add(buf, len, DSR_NO_NEXT_HDR_TYPE);
 
 	if (!dp->dh.opth) {
@@ -94,7 +94,7 @@ int NSCLASS dsr_ack_send(struct in_addr dst, unsigned short id)
 
 /* 	buf += DSR_SRT_OPT_LEN(dp->srt); */
 /* 	len -= DSR_SRT_OPT_LEN(dp->srt); */
-
+//第98行调用dsr_ack_opt_add()函数用于将ack选项头添加至数据包之中
 	ack_opt = dsr_ack_opt_add(buf, len, dp->src, dp->dst, id);
 
 	if (!ack_opt) {
@@ -105,7 +105,7 @@ int NSCLASS dsr_ack_send(struct in_addr dst, unsigned short id)
 	DEBUG("Sending ACK to %s id=%u\n", print_ip(dst), id);
 
 	dp->flags |= PKT_XMIT_JITTER;
-
+//第109行调用XMIT()函数，传输数据包。
 	XMIT(dp);
 
 	return 1;
