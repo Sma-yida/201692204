@@ -384,8 +384,8 @@ int NSCLASS dsr_srt_add(struct dsr_pkt *dp)
 
 	return 0;
 }
-
-int NSCLASS dsr_srt_opt_recv(struct dsr_pkt *dp, struct dsr_srt_opt *srt_opt)//dsr—选项回复定义同上
+//dsr_srt_opt_recv()-处理路由选型
+int NSCLASS dsr_srt_opt_recv(struct dsr_pkt *dp, struct dsr_srt_opt *srt_opt)
 {
 	struct in_addr next_hop_intended;
 	struct in_addr myaddr = my_addr();
@@ -428,7 +428,7 @@ int NSCLASS dsr_srt_opt_recv(struct dsr_pkt *dp, struct dsr_srt_opt *srt_opt)//d
 //自动路由缩短-检查此节点是否为计划下一跳。如果不是，判断它是其余部分的源路由么
 	/* Automatic route shortening - Check if this node is the
 	 * intended next hop. If not, is it part of the remaining
-	 * source route? */
+	 * source route? *///用于判断是否可以经行路由缩减
 	if (next_hop_intended.s_addr != myaddr.s_addr &&
 	    dsr_srt_find_addr(dp->srt, myaddr, srt_opt->sleft) &&
 	    !grat_rrep_tbl_find(dp->src, dp->prv_hop)) {
@@ -456,7 +456,7 @@ int NSCLASS dsr_srt_opt_recv(struct dsr_pkt *dp, struct dsr_srt_opt *srt_opt)//d
 			return DSR_PKT_DROP;
 		}
 		DEBUG("my srt: %s\n", print_srt(srt));
-
+//在缩减列表中添加本次路由缩减并且发送一个路由回复用于通知新的路由变更
 		grat_rrep_tbl_add(dp->src, dp->prv_hop);
 
 		dsr_rrep_send(srt, srt_cut);
@@ -480,6 +480,6 @@ int NSCLASS dsr_srt_opt_recv(struct dsr_pkt *dp, struct dsr_srt_opt *srt_opt)//d
         //检查下一跳或dst中的多播地址，检查MTU并与数据包大小进行比较
 	/* TODO: check for multicast address in next hop or dst */
 	/* TODO: check MTU and compare to pkt size */
-
+//如果不能进行路由缩减，则转发数据包
 	return DSR_PKT_FORWARD;
 }
