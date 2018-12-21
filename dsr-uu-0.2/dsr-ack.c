@@ -259,16 +259,16 @@ int NSCLASS dsr_ack_req_send(struct in_addr neigh_addr, unsigned short id)
 	dsr_pkt_free(dp);
 	return -1;
 }
-
+//在dsr_ack_req_opt_recv() 函数中将回复请求发一个ACK数据包
 int NSCLASS dsr_ack_req_opt_recv(struct dsr_pkt *dp, struct dsr_ack_req_opt *ack_req_opt)
 {
 	unsigned short id;
-
+//首先在267-268行进行判断，如果不满足条件就返回包错误
 	if (!ack_req_opt || !dp || dp->flags & PKT_PROMISC_RECV)
 		return DSR_PKT_ERROR;
 
 	dp->ack_req_opt = ack_req_opt;
-
+//然后使用ntohs()函数给id赋值，然后将该id添加到DSR通用选项头的后面，如RFC文档中那样
 	id = ntohs(ack_req_opt->id);
 
 	if (!dp->srt_opt)
@@ -276,7 +276,7 @@ int NSCLASS dsr_ack_req_opt_recv(struct dsr_pkt *dp, struct dsr_ack_req_opt *ack
 
 	DEBUG("src=%s prv=%s id=%u\n",
 	      print_ip(dp->src), print_ip(dp->prv_hop), id);
-
+//接着，在280行，执行dsr_ack_send()函数，将回复请求发一个ACK数据包。
 	dsr_ack_send(dp->prv_hop, id);
 
 	return DSR_PKT_NONE;
