@@ -60,12 +60,12 @@ struct dsr_srt_opt {//dsr_srt_opt关于源路由选型的定义
 
 /* Internal representation of a source route */
 struct dsr_srt {
-	struct in_addr src;
-	struct in_addr dst;
+	struct in_addr src;//源节点
+	struct in_addr dst;//目标节点
 	unsigned short flags;
 	unsigned short index;
-	unsigned int laddrs;	/* length in bytes if addrs */
-	struct in_addr addrs[0];	/* Intermediate nodes */
+	unsigned int laddrs;	/* length in bytes if addrs *///地址总长度
+	struct in_addr addrs[0];/* Intermediate nodes *///路径经过的中间节点
 };
 
 static inline char *print_srt(struct dsr_srt *srt)
