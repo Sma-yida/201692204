@@ -8,7 +8,7 @@ INTERNET-DRAFT                David A. Maltz, Carnegie Mellon University
                     for Mobile Ad Hoc Networks (DSR)
 
                      <draft-ietf-manet-dsr-10.txt>
-
+适用于移动自组网的动态源路由协议(DSR)
 
 Status of This Memo
 
