@@ -66,9 +66,9 @@ struct rreq_tbl_query {
 	struct in_addr *target;
 	unsigned int *id;
 };
-
+//typedef int (*criteria_t) (void *elm, void *data);crit_addr-判断路由请求表项的目的地址和传进来参数的地址是否匹配
 static inline int crit_addr(void *pos, void *data)
-{
+{//crit_addr-判断路由请求表项的目的地址和传进来参数的地址是否匹配
 	struct rreq_tbl_entry *e = (struct rreq_tbl_entry *)pos;
 	struct in_addr *a = (struct in_addr *)data;
 
