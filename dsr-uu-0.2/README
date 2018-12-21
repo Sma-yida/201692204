@@ -1,6 +1,7 @@
 DSR-UU is a DSR implementation that runs in Linux (kernel 2.4/2.6) and
 in the ns-2 network simulator.
-
+//DSR- uu是在Linux(内核2.4/2.6)和ns-2网络模拟器中运行的DSR实现。这是一个实验软件。它可能会使你的电脑死机
+一些点。请自行承担使用风险
 
 DISCLAIMER
 ==========
