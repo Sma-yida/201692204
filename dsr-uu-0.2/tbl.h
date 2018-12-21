@@ -156,16 +156,16 @@ static inline int tbl_add_tail(struct tbl *t, list_t * l)
 	DSR_WRITE_UNLOCK(&t->lock);
 	return len;
 }
-
+//__tbl_find()在路由请求表中寻找是否已经有相同目的地的路由请求。
 static inline void *__tbl_find(struct tbl *t, void *id, criteria_t crit)
-{
+{                                   //整个__tbl_find函数则是遍历整个路由请求表，寻找是否有和参数id相同的地址
 	list_t *pos;
-
 	list_for_each(pos, &t->head) {
 		if (crit(pos, id))
-			return pos;
+			return pos;//成功则返回指向匹配元素的指针
+
 	}
-	return NULL;
+	return NULL;               //没有找到相同的元素就返回NULL
 }
 
 static inline void *__tbl_detach(struct tbl *t, list_t * l)
