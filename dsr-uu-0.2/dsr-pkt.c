@@ -82,14 +82,15 @@ int dsr_pkt_free_opts(struct dsr_pkt *dp)
 
 	return len;
 }
-
-#ifdef NS2
+//在dsr_pkt_alloc()函数中，实现了生成数据包的功能
+#ifdef NS2//同样会根据是否是在NS2平台上进行模拟而分成两种情况，此处对NS2平台上的宏定义进行分析：
 struct dsr_pkt *dsr_pkt_alloc(Packet * p)
 {
-	struct dsr_pkt *dp;
-	struct hdr_cmn *cmh;
-	int dsr_opts_len = 0;
-
+	struct dsr_pkt *dp;//定义了一个数据包结构体
+	struct hdr_cmn *cmh;//定义了一个数据包的common头指针
+	
+	int dsr_opts_len = 0; //为数据包申请了一个内存空间，然后将其置0，方便后续初始化
+	
 	dp = (struct dsr_pkt *)MALLOC(sizeof(struct dsr_pkt), GFP_ATOMIC);
 
 	if (!dp)
@@ -97,8 +98,8 @@ struct dsr_pkt *dsr_pkt_alloc(Packet * p)
 
 	memset(dp, 0, sizeof(struct dsr_pkt));
 
-	if (p) {
-		cmh = hdr_cmn::access(p);
+	if (p) {//判断数据包非空的情况下：对其进行初始化操作
+		cmh = hdr_cmn::access(p);//address()是接口函数，用来访问数据包的包头部分
 
 		dp->p = p;
 		dp->mac.raw = p->access(hdr_mac::offset_);
@@ -108,8 +109,8 @@ struct dsr_pkt *dsr_pkt_alloc(Packet * p)
 		    Address::instance().get_nodeaddr(dp->nh.iph->saddr());
 		dp->dst.s_addr =
 		    Address::instance().get_nodeaddr(dp->nh.iph->daddr());
-
-		if (cmh->ptype() == PT_DSR) {
+                 //以下根据common头的类型执行不同的操作
+		if (cmh->ptype() == PT_DSR) {//PT_DSR类型
 			struct dsr_opt_hdr *opth;
 			
 			opth = hdr_dsr::access(p);
@@ -130,19 +131,19 @@ struct dsr_pkt *dsr_pkt_alloc(Packet * p)
 				ConfVal(UseNetworkLayerAck))
 				dp->flags |= PKT_REQUEST_ACK;
 		} else if ((DATA_PACKET(cmh->ptype()) || 
-			    cmh->ptype() == PT_PING) && 
+			    cmh->ptype() == PT_PING) && //PT_PING类型
 			   ConfVal(UseNetworkLayerAck))
 			dp->flags |= PKT_REQUEST_ACK;
 
 		/* A trick to calculate payload length... */
 		dp->payload_len = cmh->size() - dsr_opts_len - IP_HDR_LEN;
 	}
-	return dp;
+	return dp;//无论在101行判断的结果如何，最后都会在这行，返回dp结构体指针。
 }
 
-#else
+#else//根据是否是在NS2平台上进行模拟第二张种情况，此处对非NS2平台上的宏定义进行分析：同上理
 
-struct dsr_pkt *dsr_pkt_alloc(struct sk_buff *skb)
+struct dsr_pkt *dsr_pkt_alloc(struct sk_buff *skb)//在dsr_pkt_alloc()函数中，实现了生成数据包的功能
 {
 	struct dsr_pkt *dp;
 	int dsr_opts_len = 0;
