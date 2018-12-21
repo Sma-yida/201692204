@@ -281,30 +281,30 @@ int NSCLASS dsr_ack_req_opt_recv(struct dsr_pkt *dp, struct dsr_ack_req_opt *ack
 
 	return DSR_PKT_NONE;
 }
-
+//dsr_ack_opt_recv() 函数对ACK请求的回复
 int NSCLASS dsr_ack_opt_recv(struct dsr_ack_opt *ack)
 {
 	unsigned short id;
 	struct in_addr dst, src, myaddr;
 	int n;
+//首先判断是否是ACK
+	if (!ack)                    //如果不是的话
+		return DSR_PKT_ERROR;//则返回包错误标志
+//在294-298行，对当前节点地址、源端IP、目的端IP和id进行赋值
+	myaddr = my_addr();    //当前节点地址赋值
 
-	if (!ack)
-		return DSR_PKT_ERROR;
+	dst.s_addr = ack->dst; //目的端IP赋值
+	src.s_addr = ack->src; //源端IP赋值
+	id = ntohs(ack->id);   //id进行赋值
 
-	myaddr = my_addr();
-
-	dst.s_addr = ack->dst;
-	src.s_addr = ack->src;
-	id = ntohs(ack->id);
-
-	DEBUG("ACK dst=%s src=%s id=%u\n", print_ip(dst), print_ip(src), id);
+	DEBUG("ACK dst=%s src=%s id=%u\n", print_ip(dst), print_ip(src), id);//打印ACK的信息
 
 	if (dst.s_addr != myaddr.s_addr)
 		return DSR_PKT_ERROR;
-
+//在306行，调用maint_buf_del_all_id()函数，删除维护缓存中发送给ACK源端的数据包。
 	/* Purge packets buffered for this next hop */
 	n = maint_buf_del_all_id(src, id);
-
+//清除为此次缓冲的数据包
 	DEBUG("Removed %d packets from maint buf\n", n);
 	
 	return DSR_PKT_NONE;
