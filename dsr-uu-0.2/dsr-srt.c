@@ -23,7 +23,7 @@
 #include "dsr-rrep.h"
 #include "debug.h"
 
-struct in_addr dsr_srt_next_hop(struct dsr_srt *srt, int sleft)
+struct in_addr dsr_srt_next_hop(struct dsr_srt *srt, int sleft)//定义dsr源路由下一跳地址
 {
 	int n = srt->laddrs / sizeof(struct in_addr);
 	struct in_addr nxt_hop;
@@ -36,7 +36,7 @@ struct in_addr dsr_srt_next_hop(struct dsr_srt *srt, int sleft)
 	return nxt_hop;
 }
 
-struct in_addr dsr_srt_prev_hop(struct dsr_srt *srt, int sleft)
+struct in_addr dsr_srt_prev_hop(struct dsr_srt *srt, int sleft)//定义dsr源路由前一跳地址
 {
 	struct in_addr prev_hop;
 	int n = srt->laddrs / sizeof(u_int32_t);
@@ -50,7 +50,7 @@ struct in_addr dsr_srt_prev_hop(struct dsr_srt *srt, int sleft)
 }
 
 static int dsr_srt_find_addr(struct dsr_srt *srt, struct in_addr addr, 
-			      int sleft)
+			      int sleft)//定义dsr源路由发现地址
 {
 	int n = srt->laddrs / sizeof(struct in_addr);
 
@@ -68,7 +68,7 @@ static int dsr_srt_find_addr(struct dsr_srt *srt, struct in_addr addr,
 }
 
 struct dsr_srt *dsr_srt_new(struct in_addr src, struct in_addr dst,
-			    unsigned int length, char *addrs)
+			    unsigned int length, char *addrs)//定义新得dsr源路由结构
 {
 	struct dsr_srt *sr;
 
@@ -90,7 +90,7 @@ struct dsr_srt *dsr_srt_new(struct in_addr src, struct in_addr dst,
 }
 
 struct dsr_srt *dsr_srt_new_rev(struct dsr_srt *srt)
-{
+{//定义新得dsr源路由结构回复
 	struct dsr_srt *srt_rev;
 	int i, n;
 
@@ -116,7 +116,7 @@ struct dsr_srt *dsr_srt_new_rev(struct dsr_srt *srt)
 }
 
 struct dsr_srt *dsr_srt_new_split(struct dsr_srt *srt, struct in_addr addr)
-{
+{//分离dsr源路由
 	struct dsr_srt *srt_split;
 	int i, n;
 
@@ -152,7 +152,7 @@ struct dsr_srt *dsr_srt_new_split(struct dsr_srt *srt, struct in_addr addr)
 }
 
 struct dsr_srt *dsr_srt_new_split_rev(struct dsr_srt *srt, struct in_addr addr)
-{
+{//分离dsr源路由的回复
 	struct dsr_srt *srt_split, *srt_split_rev;
 
 	srt_split = dsr_srt_new_split(srt, addr);
@@ -169,7 +169,7 @@ struct dsr_srt *dsr_srt_new_split_rev(struct dsr_srt *srt, struct in_addr addr)
 
 struct dsr_srt *dsr_srt_shortcut(struct dsr_srt *srt, struct in_addr a1,
 				 struct in_addr a2)
-{
+{//定义dsr源路由捷径结构
 	struct dsr_srt *srt_cut;
 	int i, j, n, n_cut, a1_num, a2_num;
 
@@ -222,7 +222,7 @@ struct dsr_srt *dsr_srt_shortcut(struct dsr_srt *srt, struct in_addr a1,
 }
 
 struct dsr_srt *dsr_srt_concatenate(struct dsr_srt *srt1, struct dsr_srt *srt2)
-{
+{//dsr源路由连接起来
 	struct dsr_srt *srt_cat;
 	int n, n1, n2;
 	
@@ -256,7 +256,7 @@ struct dsr_srt *dsr_srt_concatenate(struct dsr_srt *srt1, struct dsr_srt *srt2)
 
 
 int dsr_srt_check_duplicate(struct dsr_srt *srt)
-{
+{//dsr源路由的副本检查
 	struct in_addr *buf;
 	int n, i, res = 0;
 	
@@ -291,27 +291,28 @@ int dsr_srt_check_duplicate(struct dsr_srt *srt)
 
 	return res;
 }
+//源路由请求是指，源路由的用户可以指定他所发送的数据包沿途经过的部分或者全部路由器。
 struct dsr_srt_opt *dsr_srt_opt_add(char *buf, int len, int flags, 
 				    int salvage, struct dsr_srt *srt)
-{
+{//在进行源路由的第一步，需要向数据包的头中加入一个选项和dsr_opt_hdr_add()函数类似
 	struct dsr_srt_opt *srt_opt;
 
-	if (len < (int)DSR_SRT_OPT_LEN(srt))
+	if (len < (int)DSR_SRT_OPT_LEN(srt))//判断长度是否可以容纳的下该选项长度
 		return NULL;
 
-	srt_opt = (struct dsr_srt_opt *)buf;
-
-	srt_opt->type = DSR_OPT_SRT;
-	srt_opt->length = srt->laddrs + 2;
-	srt_opt->f = (flags & SRT_FIRST_HOP_EXT) ? 1 : 0;
-	srt_opt->l = (flags & SRT_LAST_HOP_EXT) ? 1 : 0;
-	srt_opt->res = 0;
+	srt_opt = (struct dsr_srt_opt *)buf;//将选项的指针指向该缓冲区
+//305-311行对选项的类型、长度等内容进行初始化
+	srt_opt->type = DSR_OPT_SRT;                      //选项类型初始化
+	srt_opt->length = srt->laddrs + 2;                //选项长度初始化
+	srt_opt->f = (flags & SRT_FIRST_HOP_EXT) ? 1 : 0; //first-hop定义
+	srt_opt->l = (flags & SRT_LAST_HOP_EXT) ? 1 : 0;  //last-hop定义
+	srt_opt->res = 0;                                    
 	srt_opt->salv = salvage;
 	srt_opt->sleft = (srt->laddrs / sizeof(struct in_addr));
 
-	memcpy(srt_opt->addrs, srt->addrs, srt->laddrs);
+	memcpy(srt_opt->addrs, srt->addrs, srt->laddrs);  //对地址列表进行复制
 
-	return srt_opt;
+	return srt_opt;                                   //返回该指针
 }
 
 int NSCLASS dsr_srt_add(struct dsr_pkt *dp)
@@ -384,7 +385,7 @@ int NSCLASS dsr_srt_add(struct dsr_pkt *dp)
 	return 0;
 }
 
-int NSCLASS dsr_srt_opt_recv(struct dsr_pkt *dp, struct dsr_srt_opt *srt_opt)
+int NSCLASS dsr_srt_opt_recv(struct dsr_pkt *dp, struct dsr_srt_opt *srt_opt)//dsr—选项回复定义同上
 {
 	struct in_addr next_hop_intended;
 	struct in_addr myaddr = my_addr();
@@ -398,7 +399,7 @@ int NSCLASS dsr_srt_opt_recv(struct dsr_pkt *dp, struct dsr_srt_opt *srt_opt)
 	/* We should add this source route info to the cache... */
 	dp->srt = dsr_srt_new(dp->src, dp->dst, srt_opt->length,
 			      (char *)srt_opt->addrs);
-
+       //我们应该将这个源路由信息添加到缓存中
 	if (!dp->srt) {
 		DEBUG("Create source route failed\n");
 		return DSR_PKT_ERROR;
@@ -424,7 +425,7 @@ int NSCLASS dsr_srt_opt_recv(struct dsr_pkt *dp, struct dsr_srt_opt *srt_opt)
 		    ConfValToUsecs(RouteCacheTimeout), 0, 1);
 
 	dsr_rtc_add(dp->srt, ConfValToUsecs(RouteCacheTimeout), 0);
-
+//自动路由缩短-检查此节点是否为计划下一跳。如果不是，判断它是其余部分的源路由么
 	/* Automatic route shortening - Check if this node is the
 	 * intended next hop. If not, is it part of the remaining
 	 * source route? */
@@ -472,11 +473,11 @@ int NSCLASS dsr_srt_opt_recv(struct dsr_pkt *dp, struct dsr_srt_opt *srt_opt)
 
 	if (srt_opt->sleft > n) {
 		// Send ICMP parameter error
-		return DSR_PKT_SEND_ICMP;
+		return DSR_PKT_SEND_ICMP;//发送ICMP参数错误
 	}
 
 	srt_opt->sleft--;
-
+        //检查下一跳或dst中的多播地址，检查MTU并与数据包大小进行比较
 	/* TODO: check for multicast address in next hop or dst */
 	/* TODO: check MTU and compare to pkt size */
 
