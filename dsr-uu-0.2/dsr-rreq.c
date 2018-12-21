@@ -498,7 +498,7 @@ int NSCLASS dsr_rreq_send(struct in_addr target, int ttl)
 //调用dsr_pkt_free()函数，将该数据包的空间释放，丢弃该数据包，然后退出函数
 	return -1;
 }
-
+//dsr_rreq_opt_recv()函数实现了接收处理路由发现请求选项的功能
 int NSCLASS dsr_rreq_opt_recv(struct dsr_pkt *dp, struct dsr_rreq_opt *rreq_opt)
 {
 	struct in_addr myaddr;
@@ -506,15 +506,15 @@ int NSCLASS dsr_rreq_opt_recv(struct dsr_pkt *dp, struct dsr_rreq_opt *rreq_opt)
 	struct dsr_srt *srt_rev, *srt_rc;
 	int action = DSR_PKT_NONE;
 	int i, n;
-
+//对数据包、选项进行判断
 	if (!dp || !rreq_opt || dp->flags & PKT_PROMISC_RECV)
-		return DSR_PKT_DROP;
+		return DSR_PKT_DROP;//若不满足条件，则丢弃该数据包
 	
 	dp->num_rreq_opts++;
 	
-	if (dp->num_rreq_opts > 1) {
-		DEBUG("More than one RREQ opt!!! - Ignoring\n");
-		return DSR_PKT_ERROR;
+	if (dp->num_rreq_opts > 1) {//如果发现该路由请求选项超过了一个
+		DEBUG("More than one RREQ opt!!! - Ignoring\n");//则打印错误
+		return DSR_PKT_ERROR;                           //并返回“包错误”标记
 	}
 
 	dp->rreq_opt = rreq_opt;
@@ -522,17 +522,17 @@ int NSCLASS dsr_rreq_opt_recv(struct dsr_pkt *dp, struct dsr_rreq_opt *rreq_opt)
 	myaddr = my_addr();
 	
 	trg.s_addr = rreq_opt->target;
-
-	if (dsr_rreq_duplicate(dp->src, trg, ntohs(rreq_opt->id))) {
-		DEBUG("Duplicate RREQ from %s\n", print_ip(dp->src));
-		return DSR_PKT_DROP;
+//调用dsr_rreq_duplicate()函数，检查当前节点是否收到过该请求
+	if (dsr_rreq_duplicate(dp->src, trg, ntohs(rreq_opt->id))) { //若收到过
+		DEBUG("Duplicate RREQ from %s\n", print_ip(dp->src));//则打印错误
+		return DSR_PKT_DROP;                                 //并丢弃该数据包
 	}
-
-	rreq_tbl_add_id(dp->src, trg, ntohs(rreq_opt->id));
-
+ //若未重复收到，则调用rreq_tbl_add_id()函数，在路由请求表中添加该请求   
+	rreq_tbl_add_id(dp->src, trg, ntohs(rreq_opt->id)); //调用rreq_tbl_add_id()函数
+//调用dsr_srt_new()函数，根据当前节点的路由，建立源路由
 	dp->srt = dsr_srt_new(dp->src, myaddr, DSR_RREQ_ADDRS_LEN(rreq_opt),
-			      (char *)rreq_opt->addrs);
-
+			      (char *)rreq_opt->addrs);//调用dsr_srt_new()函数
+//然后进行判断
 	if (!dp->srt) {
 		DEBUG("Could not extract source route\n");
 		return DSR_PKT_ERROR;
@@ -540,10 +540,11 @@ int NSCLASS dsr_rreq_opt_recv(struct dsr_pkt *dp, struct dsr_rreq_opt *rreq_opt)
 	DEBUG("RREQ target=%s src=%s dst=%s laddrs=%d\n",
 	      print_ip(trg), print_ip(dp->src),
 	      print_ip(dp->dst), DSR_RREQ_ADDRS_LEN(rreq_opt));
-
+//打印RREQ的信息
 	/* Add reversed source route */
+//调用dsr_srt_new_rev()函数，根据当前路由，寻找逆向源路由来进行路由回复
 	srt_rev = dsr_srt_new_rev(dp->srt);
-
+//接下来进行判断并打印信息
 	if (!srt_rev) {
 		DEBUG("Could not reverse source route\n");
 		return DSR_PKT_ERROR;
@@ -553,7 +554,7 @@ int NSCLASS dsr_rreq_opt_recv(struct dsr_pkt *dp, struct dsr_rreq_opt *rreq_opt)
 
 	dsr_rtc_add(srt_rev, ConfValToUsecs(RouteCacheTimeout), 0);
 
-	/* Set previous hop */
+	/* Set previous hop *///设置上一跳信息
 	if (srt_rev->laddrs > 0)
 		dp->prv_hop = srt_rev->addrs[0];
 	else
@@ -561,24 +562,24 @@ int NSCLASS dsr_rreq_opt_recv(struct dsr_pkt *dp, struct dsr_rreq_opt *rreq_opt)
 
 	neigh_tbl_add(dp->prv_hop, dp->mac.ethh);
 
-	/* Send buffered packets */
+	/* Send buffered packets *///然后发送缓存包
 	send_buf_set_verdict(SEND_BUF_SEND, srt_rev->dst);
 
-	if (rreq_opt->target == myaddr.s_addr) {
+	if (rreq_opt->target == myaddr.s_addr) {//如果目标节点就是当前节点的话
 
-		DEBUG("RREQ OPT for me - Send RREP\n");
-
+		DEBUG("RREQ OPT for me - Send RREP\n");//打印信息
+//根据草案，IP头中的dest addr必须使用目标地址进行更新
 		/* According to the draft, the dest addr in the IP header must
 		 * be updated with the target address */
-#ifdef NS2
+#ifdef NS2//然后根据是否在NS2平台进行模拟来设置
 		dp->nh.iph->daddr() = (nsaddr_t) rreq_opt->target;
 #else
 		dp->nh.iph->daddr = rreq_opt->target;
 #endif
-		dsr_rrep_send(srt_rev, dp->srt);
+		dsr_rrep_send(srt_rev, dp->srt);//最后发送路由回复
 
-		action = DSR_PKT_NONE;
-		goto out;
+		action = DSR_PKT_NONE;//然后将当前状态action设置为不进行任何操作
+		goto out;//释放空间，结束函数。
 	} 
 	
 	n = DSR_RREQ_ADDRS_LEN(rreq_opt) / sizeof(struct in_addr);
@@ -591,8 +592,8 @@ int NSCLASS dsr_rreq_opt_recv(struct dsr_pkt *dp, struct dsr_rreq_opt *rreq_opt)
 			action = DSR_PKT_DROP;
 			goto out;
 		}
-
-	/* TODO: Check Blacklist */
+//如果当前节点不是目的节点的话检查黑名单
+	/* TODO: Check Blacklist *///调用lc_srt_find()函数，查看自身节点中是否存在到目的节点的路由
 	srt_rc = lc_srt_find(myaddr, trg);
 	
 	if (srt_rc) {
@@ -600,7 +601,7 @@ int NSCLASS dsr_rreq_opt_recv(struct dsr_pkt *dp, struct dsr_rreq_opt *rreq_opt)
 		/* Send cached route reply */
 		
 		DEBUG("Send cached RREP\n");
-
+//如果发现了对应的路由，调用dsr_srt_concatenate()函数将路由连接起来，然后返回路由回复
 		srt_cat = dsr_srt_concatenate(dp->srt, srt_rc);
 		
 		FREE(srt_rc);
@@ -629,7 +630,7 @@ int NSCLASS dsr_rreq_opt_recv(struct dsr_pkt *dp, struct dsr_rreq_opt *rreq_opt)
 		
 		FREE(srt_cat);
 	} else {
-
+//但如果没有发现满足要求的路由，调用dsr_pkt_alloc_opts_expand()函数，DSR选项分配更多的内存空间
 	rreq_forward:	
 		dsr_pkt_alloc_opts_expand(dp, sizeof(struct in_addr));
 
@@ -641,9 +642,9 @@ int NSCLASS dsr_rreq_opt_recv(struct dsr_pkt *dp, struct dsr_rreq_opt *rreq_opt)
 
 			memmove(to, from, sizeof(struct in_addr));
 		}
-		rreq_opt->addrs[n] = myaddr.s_addr;
+		rreq_opt->addrs[n] = myaddr.s_addr;//然后将自身的IP添加到路由请求选项中
 		rreq_opt->length += sizeof(struct in_addr);
-
+//更新IP头信息并进行转发。
 		dp->dh.opth->p_len = htons(ntohs(dp->dh.opth->p_len) +
 					   sizeof(struct in_addr));
 #ifdef __KERNEL__
