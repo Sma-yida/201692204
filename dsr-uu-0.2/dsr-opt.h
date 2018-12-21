@@ -18,26 +18,26 @@
 #ifndef NO_GLOBALS
 
 /* Generic header for all options */
-struct dsr_opt {
-	u_int8_t type;
-	u_int8_t length;
+struct dsr_opt {//DSR选项通用头分析
+	u_int8_t type;  //type指的是选项的类型
+	u_int8_t length;//length指的是选项的长度。（不包括变量type和length本身占有的空间）
 };
 
 /* The DSR options header (always comes first) */
 //通过对 dsr_opt_hdr代码分析，我们可以得出DSR选项头的格式详见大作业文档
 struct dsr_opt_hdr {
-	u_int8_t nh;//Next Header：下一报头
+	u_int8_t nh;//Next Header：下一报头，与IP头中的协议字段取值相同
 #if defined(__LITTLE_ENDIAN_BITFIELD)//对小端的定义
 
 	u_int8_t res:7; //Reserved：保留位，小端模式占7位
-	u_int8_t f:1;   //Flag：标志位，小端模式占1位
+	u_int8_t f:1;   //Flag：标志位，小端模式占1位-DSR选项头中置0，在DSR流状态头中置1
 #elif defined (__BIG_ENDIAN_BITFIELD)//同理对大端的定义
 	u_int8_t f:1;    //Flag：标志位，大端模式占1位
 	u_int8_t res:7; //Reserved：保留位，大端模式占7位
 #else
 #error  "Please fix <asm/byteorder.h>"
 #endif
-	u_int16_t p_len;	/* payload length 负载长度*/
+	u_int16_t p_len;	/* payload length 负载长度*///所有DSR选项的总长度。
 #ifdef NS2
 	static int offset_;
 
