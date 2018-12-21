@@ -21,26 +21,26 @@
 #include "dsr-rerr.h"
 #include "dsr-srt.h"
 #include "dsr-ack.h"
-
+//在dsr_opt_hdr_add()函数中，实现了将dsr选项头添加到头部的功能
 struct dsr_opt_hdr *dsr_opt_hdr_add(char *buf, unsigned int len, 
 				    unsigned int protocol)
 {
 	struct dsr_opt_hdr *opt_hdr;
 
-	if (len < DSR_OPT_HDR_LEN)
+	if (len < DSR_OPT_HDR_LEN)          //先判断长度是否能放下该选项头
 		return NULL;
 
-	opt_hdr = (struct dsr_opt_hdr *)buf;
-
+	opt_hdr = (struct dsr_opt_hdr *)buf;//将头指针指向该缓冲区
+        //以下是对选项进行初始化操作，并返回该指针
 	opt_hdr->nh = protocol;
 	opt_hdr->f = 0;
 	opt_hdr->res = 0;
 	opt_hdr->p_len = htons(len - DSR_OPT_HDR_LEN);
 
-	return opt_hdr;
+	return opt_hdr;                     //返回指针
 }
-
-#ifdef __KERNEL__
+//dsr_build_ip()函数是dsr实现ip构建的功能，数据包结构，源端地址结构，目的端地址结构，IP长度，上层协议，ttl最大跳数
+#ifdef __KERNEL__生命周期
 struct iphdr *dsr_build_ip(struct dsr_pkt *dp, struct in_addr src,
 			   struct in_addr dst, int ip_len, int tot_len,
 			   int protocol, int ttl)
@@ -52,22 +52,22 @@ struct iphdr *dsr_build_ip(struct dsr_pkt *dp, struct in_addr src,
 	if (dp->skb && dp->skb->nh.raw) {
 		memcpy(dp->ip_data, dp->skb->nh.raw, ip_len);
 	} else {
-		iph->version = IPVERSION;
+		iph->version = IPVERSION;//IP版本
 		iph->ihl = 5;
 		iph->tos = 0;
 		iph->id = 0;
 		iph->frag_off = 0;
-		iph->ttl = (ttl ? ttl : IPDEFTTL);
-		iph->saddr = src.s_addr;
-		iph->daddr = dst.s_addr;
+		iph->ttl = (ttl ? ttl : IPDEFTTL);//生命周期
+		iph->saddr = src.s_addr;//源端IP地址
+		iph->daddr = dst.s_addr;//目的端IP地址
 	}
 	
 	iph->tot_len = htons(tot_len);
-	iph->protocol = protocol;
+	iph->protocol = protocol;//ip头协议定义
 
-	ip_send_check(iph);
+	ip_send_check(iph);     //校验选项
 
-	return iph;
+	return iph;            //返回IP头
 }
 #endif
 
@@ -91,7 +91,7 @@ struct dsr_opt *dsr_opt_find_opt(struct dsr_pkt *dp, int type)
 	return NULL;
 }
 
-int NSCLASS dsr_opt_remove(struct dsr_pkt *dp)
+int NSCLASS dsr_opt_remove(struct dsr_pkt *dp)//dsr选项移除功能函数
 {
 	int len, ip_len, prot, ttl;
 
@@ -99,7 +99,7 @@ int NSCLASS dsr_opt_remove(struct dsr_pkt *dp)
 		return -1;
 
 	prot = dp->dh.opth->nh;
-#ifdef NS2
+#ifdef NS2//平台分两类说明
 	ip_len = 20;
 	ttl = dp->nh.iph->ttl();
 #else
@@ -208,7 +208,7 @@ int dsr_opt_parse(struct dsr_pkt *dp)
 	return n;
 }
 
-int NSCLASS dsr_opt_recv(struct dsr_pkt *dp)
+int NSCLASS dsr_opt_recv(struct dsr_pkt *dp)//检查数据包选项返回数据包状态
 {
 	int dsr_len, l;
 	int action = 0;
