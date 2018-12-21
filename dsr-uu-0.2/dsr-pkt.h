@@ -22,24 +22,24 @@
 #define DEFAULT_TAILROOM 128
 
 /* Internal representation of a packet. For portability */
-struct dsr_pkt {
-	struct in_addr src;	/* IP level data */
-	struct in_addr dst;
-	struct in_addr nxt_hop;
-	struct in_addr prv_hop;
-	int flags;
-	int salvage;
-#ifdef NS2
+struct dsr_pkt {//dsr_pkt()数据包结构定义：在26-29行，分别定义了源端IP，目的端IP，下一跳IP和上一跳IP
+	struct in_addr src;	/* IP level data *///源端IP地址定义
+	struct in_addr dst;                        //目的端IP地址定义
+	struct in_addr nxt_hop;                    //下一跳IP
+	struct in_addr prv_hop;                    //上一跳IP
+	int flags;                                 //标志位
+	int salvage;                               //保留位
+#ifdef NS2//在32-52行，根据是否是在NS2平台进行协议模拟定义了：
 	union {
 		struct hdr_mac *ethh;
 		unsigned char *raw;
-	} mac;
+	} mac;//定义可以访问MAC协议头部的mac联合体
 	struct hdr_ip ip_data;
 	union {
 		struct hdr_ip *iph;
 		char *raw;
-	} nh;
-#else
+	} nh;//定义可以访问IP协议头部的nh联合体
+#else//同理
 	union {
 		struct ethhdr *ethh;
 		char *raw;
@@ -48,7 +48,7 @@ struct dsr_pkt {
 		struct iphdr *iph;
 		char *raw;
 	} nh;
-	char ip_data[60];
+	char ip_data[60];//定义IP数据包的ip_data
 #endif
 	struct {
 		union {
@@ -56,25 +56,25 @@ struct dsr_pkt {
 			char *raw;
 		};		
 		char *tail, *end;  
-	} dh;
-		
+	} dh;//在53-59行，定义了可以访问dsr选项的结构体dh。
+	     //在62-68行，分别定义了
 	int num_rrep_opts, num_rerr_opts, num_rreq_opts, num_ack_opts;
-	struct dsr_srt_opt *srt_opt;
-	struct dsr_rreq_opt *rreq_opt;	/* Can only be one */
-	struct dsr_rrep_opt *rrep_opt[MAX_RREP_OPTS];
-	struct dsr_rerr_opt *rerr_opt[MAX_RERR_OPTS];
-	struct dsr_ack_opt *ack_opt[MAX_ACK_OPTS];
-	struct dsr_ack_req_opt *ack_req_opt;
-	struct dsr_srt *srt;	/* Source route */
+	struct dsr_srt_opt *srt_opt;     //定义了指向源路由选项
+	struct dsr_rreq_opt *rreq_opt;	/* Can only be one *///路由请求选项（可能不止一个）
+	struct dsr_rrep_opt *rrep_opt[MAX_RREP_OPTS];//路由回复选项
+	struct dsr_rerr_opt *rerr_opt[MAX_RERR_OPTS];//路由错误选项
+	struct dsr_ack_opt *ack_opt[MAX_ACK_OPTS];   //确认选项
+	struct dsr_ack_req_opt *ack_req_opt;         //确认请求选项
+	struct dsr_srt *srt;	/* Source route */   //源路由结构体的指针
 
-
-	int payload_len;
+//在71-78行，定义了负载、负载长度及一个分片结构体。
+	int payload_len;    //负载长度
 #ifdef NS2
 	AppData *payload;
 	Packet *p;
 #else
 	char *payload;
-	struct sk_buff *skb;
+	struct sk_buff *skb; //定义一个分片结构体
 #endif
 
 };
@@ -120,3 +120,4 @@ void dsr_pkt_free(struct dsr_pkt *dp);
 int dsr_pkt_free_opts(struct dsr_pkt *dp);
 
 #endif				/* _DSR_PKT_H */
+/*在对数据包结构体的定义代码分析
