@@ -101,7 +101,7 @@ void NSCLASS rreq_tbl_set_max_len(unsigned int max_len)
 	rreq_tbl.max_len = max_len;
 }
 #ifdef __KERNEL__
-static int rreq_tbl_print(struct tbl *t, char *buf)
+static int rreq_tbl_print(struct tbl *t, char *buf)//路由表输出功能定义
 {
 	list_t *pos1, *pos2;
 	int len = 0;
@@ -150,7 +150,7 @@ static int rreq_tbl_print(struct tbl *t, char *buf)
 }
 #endif /* __KERNEL__ */
 
-void NSCLASS rreq_tbl_timeout(unsigned long data)
+void NSCLASS rreq_tbl_timeout(unsigned long data)//超时定义
 {
 	struct rreq_tbl_entry *e = (struct rreq_tbl_entry *)data;
 	struct timeval expires;
@@ -200,7 +200,7 @@ void NSCLASS rreq_tbl_timeout(unsigned long data)
 
 	set_timer(e->timer, &expires);
 }
-
+//_rreq_tbl_entry_create()函数，对表项进行内存分配，然后初始化项目值，然后返回指向路由请求表的指针。
 struct rreq_tbl_entry *NSCLASS __rreq_tbl_entry_create(struct in_addr node_addr)
 {
 	struct rreq_tbl_entry *e;
@@ -242,7 +242,7 @@ struct rreq_tbl_entry *NSCLASS __rreq_tbl_add(struct in_addr node_addr)
 	struct rreq_tbl_entry *e;
 
 	e = __rreq_tbl_entry_create(node_addr);
-
+//首先会调用_rreq_tbl_entry_create()函数，对表项进行内存分配，然后初始化项目值，然后返回指向路由请求表的指针。
 	if (!e)
 		return NULL;
 
@@ -262,12 +262,12 @@ struct rreq_tbl_entry *NSCLASS __rreq_tbl_add(struct in_addr node_addr)
 		tbl_flush(&f->rreq_id_tbl, NULL);
 
 		FREE(f);
-	}
+	}//在249-265行，会对请求表进行判断，检查表中条目是否已满，如果已经满了，就删除表中的第一条请求。
 	__tbl_add_tail(&rreq_tbl, &e->l);
 
 	return e;
 }
-
+//在266行，调用_tbl_add_tail()函数，将新的请求添加到请求表的最后，然后返回指针。
 int NSCLASS
 rreq_tbl_add_id(struct in_addr initiator, struct in_addr target,
 		unsigned short id)
@@ -338,22 +338,23 @@ int NSCLASS rreq_tbl_route_discovery_cancel(struct in_addr dst)
 
 	return 1;
 }
-
+//在dsr_rreq_route_discovery() 函数中，实现了发送路由请求，进行路由发现的功能
 int NSCLASS dsr_rreq_route_discovery(struct in_addr target)
-{
+{//
 	struct rreq_tbl_entry *e;
 	int ttl, res = 0;
 	struct timeval expires;
-
+/*首先，在344-346行定义一个指向路由请求表的指针；在路由请求表的结构体中，
+存放着路由求情的目的地址，当前状态，以及关于时间的一些变量；还定义了TTL，控制缓存失效期限的变量expires*/
 #define	TTL_START 1
 
 	DSR_WRITE_LOCK(&rreq_tbl.lock);
 
-	e = (struct rreq_tbl_entry *)__tbl_find(&rreq_tbl, &target, crit_addr);
-
-	if (!e)
-		e = __rreq_tbl_add(target);
-	else {
+	e = (struct rreq_tbl_entry *)__tbl_find(&rreq_tbl, &target, crit_addr);//调用_tbl_find()函数对当前目标在路由请求表中先进行搜索
+//在_tbl_find()中，是对链表中的数据进行遍历，如果发现满足条件的节点，则返回指向该结点的指针，否则返回NULL
+	if (!e)//若没有找到在路由请求表中相同的路由请求，那么就调用_rreq_tbl_add()函数，把target添加到路由请求表中
+		e = __rreq_tbl_add(target);//可参见上面第240行是_rreq_tbl_add()函数的代码实现////////
+	else {//若有，则删除原有的路由请求，将新的路由请求添加到路由请求表的末尾。
 		/* Put it last in the table */
 		__tbl_detach(&rreq_tbl, &e->l);
 		__tbl_add_tail(&rreq_tbl, &e->l);
@@ -363,19 +364,19 @@ int NSCLASS dsr_rreq_route_discovery(struct in_addr target)
 		res = -ENOMEM;
 		goto out;
 	}
-
-	if (e->state == STATE_IN_ROUTE_DISC) {
+//检查state的值
+	if (e->state == STATE_IN_ROUTE_DISC) {//表示“当前状态已经在路由发现中”
 		DEBUG("Route discovery for %s already in progress\n",
-		      print_ip(target));
-		goto out;
+		      print_ip(target));//打印信息
+		goto out;//函数执行结束
 	}
 	DEBUG("Route discovery for %s\n", print_ip(target));
-
+//时间相关的变量进行设置
 	gettime(&e->last_used);
 	e->ttl = ttl = TTL_START;
 	/* The draft does not actually specify how these Request Timeout values
 	 * should be used... ??? I am just guessing here. */
-
+//草案实际上没有指定这些请求超时值的方式
 	if (e->ttl == 1)
 		e->timeout = ConfValToUsecs(NonpropRequestTimeout);
 	else
@@ -399,7 +400,7 @@ int NSCLASS dsr_rreq_route_discovery(struct in_addr target)
 
 	return res;
 }
-
+//最后返回res结束还是的执行。
 int NSCLASS dsr_rreq_duplicate(struct in_addr initiator, struct in_addr target,
 			       unsigned int id)
 {
