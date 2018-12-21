@@ -23,6 +23,7 @@ struct dsr_rerr_opt {    //DSR路由错误选项
 #if defined(__LITTLE_ENDIAN_BITFIELD)
 	u_int8_t res:4;      //保留位
 	u_int8_t salv:4;     //salvage:该数据包被重发的次数
+//salv标志位占4bits，其含义是salvage，用来表示这个数据包被重发的次数，根据这个数值来决定该数据包是否应该被丢弃。
 #elif defined (__BIG_ENDIAN_BITFIELD)
 	u_int8_t res:4;
 	u_int8_t salv:4;
