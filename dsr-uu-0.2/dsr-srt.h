@@ -20,7 +20,7 @@
 /* Source route options header */
 /* TODO: This header is not byte order correct... is there a simple way to fix
  * it? */
-struct dsr_srt_opt {//DSR路由维护选项
+struct dsr_srt_opt {//dsr_srt_opt关于源路由选型的定义
 	u_int8_t type;
 	u_int8_t length;
 #if defined(__LITTLE_ENDIAN_BITFIELD)	
