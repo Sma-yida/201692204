@@ -416,16 +416,16 @@ int NSCLASS dsr_rreq_duplicate(struct in_addr initiator, struct in_addr target,
 
 	return in_tbl(&rreq_tbl, &d, crit_duplicate);
 }
-
+//添加路由请求的实现
 static struct dsr_rreq_opt *dsr_rreq_opt_add(char *buf, unsigned int len,
 					     struct in_addr target,
 					     unsigned int seqno)
 {
 	struct dsr_rreq_opt *rreq_opt;
-
+//判断缓冲区的空间是否足够
 	if (!buf || len < DSR_RREQ_HDR_LEN)
 		return NULL;
-
+//如果足够，就把选项指针指向缓冲区，并初始化id、长度和目的地址
 	rreq_opt = (struct dsr_rreq_opt *)buf;
 
 	rreq_opt->type = DSR_OPT_RREQ;
