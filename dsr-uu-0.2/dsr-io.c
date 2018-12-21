@@ -116,16 +116,16 @@ int NSCLASS dsr_recv(struct dsr_pkt *dp)
 //在最后，释放该数据包地址空间，丢弃该数据包，完成函数的执行。
 	return 0;
 }
-
+//在dsr_start_xmit() 函数中实现数据包传输功能
 void NSCLASS dsr_start_xmit(struct dsr_pkt *dp)
 {
 	int res;
-
-	if (!dp) {
-		DEBUG("Could not allocate DSR packet\n");
-		return;
+//进行判断是否属于数据包，
+	if (!dp) {                                       //如果不属于
+		DEBUG("Could not allocate DSR packet\n");//则打印错误
+		return;                                  //退出
 	}
-
+//进行寻找到目的节点的路由
 	dp->srt = dsr_rtc_find(dp->src, dp->dst);
 
 	if (dp->srt) {
@@ -136,12 +136,12 @@ void NSCLASS dsr_start_xmit(struct dsr_pkt *dp)
 		}
 		/* Send packet */
 
-		XMIT(dp);
+		XMIT(dp);//若存在，则发送数据包
 
 		return;
 
 	} else {
-#ifdef NS2
+#ifdef NS2      //若不存在则调用send_buf_enqueue_packet()将数据包加入到发送缓存中
 		res = send_buf_enqueue_packet(dp, &DSRUU::ns_xmit);
 #else
 		res = send_buf_enqueue_packet(dp, &dsr_dev_xmit);
@@ -150,7 +150,7 @@ void NSCLASS dsr_start_xmit(struct dsr_pkt *dp)
 			DEBUG("Queueing failed!\n");
 			goto out;
 		}
-		res = dsr_rreq_route_discovery(dp->dst);
+		res = dsr_rreq_route_discovery(dp->dst);//然后调用dsr_rreq_route_discovery()函数，进行路由发现。
 
 		if (res < 0)
 			DEBUG("RREQ Transmission failed...");
