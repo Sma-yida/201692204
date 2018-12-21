@@ -21,7 +21,7 @@
 #include "dsr-rerr.h"
 #include "dsr-srt.h"
 #include "dsr-ack.h"
-//在dsr_opt_hdr_add()函数中，实现了将dsr选项头添加到头部的功能
+//dsr_opt_hdr_add()函数中，实现了为选项头分配内存的功能
 struct dsr_opt_hdr *dsr_opt_hdr_add(char *buf, unsigned int len, 
 				    unsigned int protocol)
 {
