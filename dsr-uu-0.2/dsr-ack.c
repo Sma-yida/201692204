@@ -109,7 +109,7 @@ int NSCLASS dsr_ack_send(struct in_addr dst, unsigned short id)
 	XMIT(dp);
 
 	return 1;
-
+//若失败则调用dsr_pkt_free()函数，将该数据包的空间释放，丢弃该数据包，然后退出函数
       out_err:
 	dsr_pkt_free(dp);
 	return -1;
